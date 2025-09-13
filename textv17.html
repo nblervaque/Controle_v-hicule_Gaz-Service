@@ -1,0 +1,3509 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suivi Véhicules - Gaz Service</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #ecf0f1;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            background: #ecf0f1;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tab.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-item:hover {
+            background: #e9ecef;
+        }
+
+        .checkbox-item.checked {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .state-group {
+            margin: 20px 0;
+        }
+
+        .state-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .state-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .state-item select {
+            padding: 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            background: white;
+            min-height: 48px;
+        }
+
+        .state-item select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .state-item label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #e67e22;
+            transform: translateY(-2px);
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .controls-list {
+            margin-top: 30px;
+        }
+
+        .control-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .control-item:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .control-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .info-value {
+            color: #2c3e50;
+            margin-top: 2px;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-ok {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-missing {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-bon {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-moyen {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-mauvais {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+
+        .search-bar {
+            margin-bottom: 20px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .backup-section {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .backup-section h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .backup-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            align-items: center;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 12px 20px;
+            background: #6c757d;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .file-input-label:hover {
+            background: #5a6268;
+        }
+
+        /* Styles pour le module photo */
+        .photo-section {
+            margin: 30px 0;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px dashed #007bff;
+        }
+
+        .photo-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .photo-counter {
+            font-weight: 600;
+            color: #6c757d;
+            background: #e9ecef;
+            padding: 8px 12px;
+            border-radius: 20px;
+        }
+
+        .photo-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .photo-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .photo-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+        }
+
+        .photo-delete {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-delete:hover {
+            background: #c0392b;
+        }
+
+        /* Modal caméra */
+        .camera-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera-content {
+            background: white;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .camera-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #3498db;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .camera-header h4 {
+            margin: 0;
+        }
+
+        .camera-body {
+            padding: 15px 20px;
+            text-align: center;
+            flex: 1;
+            overflow: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera-body video {
+            width: 100%;
+            max-width: 450px;
+            max-height: 60vh;
+            border-radius: 8px;
+            background: #000;
+        }
+
+        .camera-footer {
+            padding: 15px 20px;
+            text-align: center;
+            background: #f8f9fa;
+            flex-shrink: 0;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Affichage des photos dans l'historique */
+        .control-photos {
+            margin-top: 15px;
+        }
+
+        .control-photos h5 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+        }
+
+        .photo-thumbnail {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .photo-thumbnail:hover {
+            transform: scale(1.05);
+        }
+
+        /* Modal d'agrandissement des photos */
+        .photo-viewer-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-viewer-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        .photo-viewer-image {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+        }
+
+        .photo-viewer-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        /* Styles pour l'export PDF */
+        .pdf-filters {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .date-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .pdf-results {
+            margin-top: 20px;
+        }
+
+        .pdf-control-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pdf-control-info {
+            flex: 1;
+        }
+
+        .pdf-control-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Styles spéciaux pour le PDF amélioré */
+        .pdf-page {
+            width: 297mm; /* A4 paysage */
+            min-height: 210mm;
+            background: white;
+            padding: 20mm;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+            page-break-after: always;
+        }
+
+        .pdf-page:last-child {
+            page-break-after: auto;
+        }
+
+        .pdf-document-header {
+            text-align: center;
+            border-bottom: 3px solid #2c3e50;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .pdf-company-logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .pdf-document-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+
+        .pdf-subtitle {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .pdf-vehicle-info {
+            background: #f8f9fa;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .pdf-vehicle-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .pdf-control-date {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .pdf-sections-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .pdf-section {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
+        }
+
+        .pdf-section-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .pdf-items-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .pdf-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px dotted #ddd;
+        }
+
+        .pdf-item:last-child {
+            border-bottom: none;
+        }
+
+        .pdf-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 11px;
+        }
+
+        .pdf-value {
+            color: #2c3e50;
+            font-size: 11px;
+        }
+
+        .pdf-status {
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .pdf-comments-section {
+            grid-column: 1 / -1;
+            margin-top: 10px;
+        }
+
+        .pdf-comments-content {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+            font-size: 11px;
+            white-space: pre-wrap;
+            max-height: 80px;
+            overflow: hidden;
+        }
+
+        .pdf-photos-section {
+            margin-top: 20px;
+            page-break-inside: avoid;
+        }
+
+        .pdf-photos-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .pdf-photos-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .pdf-photo-container {
+            text-align: center;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+
+        .pdf-photo {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+
+        .pdf-photo-caption {
+            font-size: 10px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .pdf-footer {
+            position: absolute;
+            bottom: 15mm;
+            left: 20mm;
+            right: 20mm;
+            text-align: center;
+            font-size: 10px;
+            color: #6c757d;
+            border-top: 1px solid #dee2e6;
+            padding-top: 10px;
+        }
+
+        .pdf-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .pdf-info-item {
+            text-align: center;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+
+        .pdf-info-label {
+            font-size: 10px;
+            color: #6c757d;
+            margin-bottom: 3px;
+        }
+
+        .pdf-info-value {
+            font-size: 12px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        /* Styles pour le module de suivi d'avancement */
+        .progress-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid transparent;
+        }
+
+        .stat-card.total {
+            border-left-color: #3498db;
+        }
+
+        .stat-card.done {
+            border-left-color: #27ae60;
+        }
+
+        .stat-card.pending {
+            border-left-color: #e74c3c;
+        }
+
+        .stat-card.percent {
+            border-left-color: #f39c12;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            transition: width 0.3s ease;
+        }
+
+        .vehicle-list {
+            margin-top: 20px;
+        }
+
+        .vehicle-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .vehicle-item:hover {
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .vehicle-item.checked {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .vehicle-item.pending {
+            background: #fff5f5;
+            border-color: #dc3545;
+        }
+
+        .vehicle-info {
+            flex: 1;
+        }
+
+        .vehicle-immat {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+
+        .vehicle-details {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 3px;
+        }
+
+        .vehicle-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        .status-icon.done {
+            background: #28a745;
+        }
+
+        .status-icon.pending {
+            background: #dc3545;
+        }
+
+        .last-control-date {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .import-section {
+            background: #f8f9fa;
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .import-section.drag-over {
+            border-color: #28a745;
+            background: #f0fff4;
+        }
+
+        .import-instructions {
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+
+        .import-instructions h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .import-template {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            text-align: left;
+        }
+
+        .template-row {
+            padding: 3px 0;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .template-header {
+            font-weight: bold;
+            background: #f8f9fa;
+            padding: 5px;
+            margin: -5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab {
+                margin-right: 0;
+                border-radius: 8px;
+            }
+
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+
+            .control-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .btn {
+                width: 100%;
+                margin: 5px 0;
+            }
+
+            .backup-controls {
+                grid-template-columns: 1fr;
+            }
+
+            .photo-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .photo-preview {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 10px;
+            }
+
+            .camera-content {
+                width: 95%;
+                margin: 10px;
+            }
+
+            .camera-header {
+                padding: 15px;
+            }
+
+            .camera-body {
+                padding: 15px;
+            }
+
+            .photos-grid {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            }
+
+            .photo-thumbnail {
+                height: 60px;
+            }
+
+            .date-filters {
+                grid-template-columns: 1fr;
+            }
+
+            .pdf-control-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .pdf-control-actions {
+                justify-content: center;
+            }
+
+            .progress-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .vehicle-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .vehicle-status {
+                justify-content: space-between;
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .warning-message {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid #ffeaa7;
+        }
+
+        .info-message {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid #bee5eb;
+        }
+
+        /* Masquer les éléments lors de la génération PDF */
+        .pdf-hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 Suivi des Véhicules</h1>
+            <p>Gaz Service - Contrôle et maintenance</p>
+        </div>
+
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('nouveau')">Nouveau Contrôle</button>
+                <button class="tab" onclick="showTab('historique')">Historique</button>
+                <button class="tab" onclick="showTab('avancement')">Suivi Avancement</button>
+                <button class="tab" onclick="showTab('sauvegarde')">Sauvegarde</button>
+                <button class="tab" onclick="showTab('export')">Export Excel</button>
+                <button class="tab" onclick="showTab('pdf')">Export PDF</button>
+            </div>
+
+            <!-- Onglet Nouveau Contrôle -->
+            <div id="nouveau" class="tab-content active">
+                <form id="vehicleForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="conducteur">Nom du conducteur *</label>
+                            <input type="text" id="conducteur" name="conducteur" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dateControle">Date du contrôle *</label>
+                            <input type="date" id="dateControle" name="dateControle" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="immatriculation">Immatriculation *</label>
+                            <input type="text" id="immatriculation" name="immatriculation" placeholder="XX-XXX-XX" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="kilometrage">Kilométrage</label>
+                            <input type="number" id="kilometrage" name="kilometrage" placeholder="123456">
+                        </div>
+                        <div class="form-group">
+                            <label for="prochainControle">Prochain contrôle technique</label>
+                            <input type="date" id="prochainControle" name="prochainControle">
+                        </div>
+                        <div class="form-group">
+                            <label for="derniereRevision">Dernière révision (km)</label>
+                            <input type="number" id="derniereRevision" name="derniereRevision" placeholder="ex: 120000">
+                        </div>
+                        <div class="form-group">
+                            <label for="commentaires">💬 Commentaires et observations</label>
+                            <textarea id="commentaires" name="commentaires" rows="3" placeholder="Ajoutez vos observations, remarques ou notes concernant ce contrôle..."></textarea>
+                        </div>
+                    </div>
+
+                    <h3>📋 Documents obligatoires</h3>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="permis" name="permis">
+                            <label for="permis">Permis de conduire</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="carteVerte" name="carteVerte">
+                            <label for="carteVerte">Carte verte (assurance)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="carteGrise" name="carteGrise">
+                            <label for="carteGrise">Carte grise</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="carteCarburant" name="carteCarburant">
+                            <label for="carteCarburant">Carte carburant</label>
+                        </div>
+                    </div>
+
+                    <h3>🛡️ Équipements de sécurité</h3>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="giletJaune" name="giletJaune">
+                            <label for="giletJaune">Gilet jaune</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="triangle" name="triangle">
+                            <label for="triangle">Triangle de signalisation</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="roueSecours" name="roueSecours">
+                            <label for="roueSecours">Roue de secours</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="trousseSecours" name="trousseSecours">
+                            <label for="trousseSecours">Trousse de secours</label>
+                        </div>
+                    </div>
+
+                    <h3>🔧 État général</h3>
+                    <div class="state-group">
+                        <div class="state-grid">
+                            <div class="state-item">
+                                <label>Rangement du véhicule</label>
+                                <select name="etatRangement">
+                                    <option value="bon">Bon</option>
+                                    <option value="moyen">Moyen</option>
+                                    <option value="mauvais">Mauvais</option>
+                                </select>
+                            </div>
+                            <div class="state-item">
+                                <label>Propreté intérieur</label>
+                                <select name="propretéInterieur">
+                                    <option value="bon">Bon</option>
+                                    <option value="moyen">Moyen</option>
+                                    <option value="mauvais">Mauvais</option>
+                                </select>
+                            </div>
+                            <div class="state-item">
+                                <label>Propreté extérieur</label>
+                                <select name="propretéExterieur">
+                                    <option value="bon">Bon</option>
+                                    <option value="moyen">Moyen</option>
+                                    <option value="mauvais">Mauvais</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>🛞 État des pneus</h3>
+                    <div class="state-group">
+                        <div class="state-grid">
+                            <div class="state-item">
+                                <label>Pneu avant gauche</label>
+                                <select name="pneuAvantGauche">
+                                    <option value="bon">Bon</option>
+                                    <option value="moyen">Moyen</option>
+                                    <option value="mauvais">Mauvais</option>
+                                </select>
+                            </div>
+                            <div class="state-item">
+                                <label>Pneu avant droit</label>
+                                <select name="pneuAvantDroit">
+                                    <option value="bon">Bon</option>
+                                    <option value="moyen">Moyen</option>
+                                    <option value="mauvais">Mauvais</option>
+                                </select>
+                            </div>
+                            <div class="state-item">
+                                <label>Pneu arrière gauche</label>
+                                <select name="pneuArriereGauche">
+                                    <option value="bon">Bon</option>
+                                    <option value="moyen">Moyen</option>
+                                    <option value="mauvais">Mauvais</option>
+                                </select>
+                            </div>
+                            <div class="state-item">
+                                <label>Pneu arrière droit</label>
+                                <select name="pneuArriereDroit">
+                                    <option value="bon">Bon</option>
+                                    <option value="moyen">Moyen</option>
+                                    <option value="mauvais">Mauvais</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>📸 Photos du contrôle</h3>
+                    <div class="photo-section">
+                        <p style="color: #6c757d; margin-bottom: 15px;">
+                            Prenez jusqu'à 5 photos pour documenter l'état du véhicule
+                        </p>
+                        
+                        <div class="photo-controls">
+                            <button type="button" class="btn btn-info" onclick="openCamera()" id="cameraBtn">
+                                📱 Prendre une photo
+                            </button>
+                            <span id="photoCount" class="photo-counter">0/5 photos</span>
+                        </div>
+
+                        <div id="photoPreview" class="photo-preview">
+                            <!-- Photos will be displayed here -->
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 30px;">
+                        <button type="submit" class="btn btn-primary">💾 Enregistrer le contrôle</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">🔄 Réinitialiser</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Onglet Historique -->
+            <div id="historique" class="tab-content">
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="🔍 Rechercher par immatriculation, conducteur..." onkeyup="filterControls()">
+                </div>
+                <div id="controlsList" class="controls-list">
+                    <div class="no-data">
+                        <h3>Aucun contrôle enregistré</h3>
+                        <p>Commencez par ajouter un nouveau contrôle</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet Suivi Avancement -->
+            <div id="avancement" class="tab-content">
+                <div style="padding: 20px;">
+                    <h3>📊 Suivi d'avancement des contrôles</h3>
+                    <p style="margin: 15px 0; color: #6c757d;">
+                        Importez votre liste de véhicules et suivez l'avancement des contrôles effectués.
+                    </p>
+
+                    <!-- Import de fichier Excel -->
+                    <div class="import-section" id="importSection">
+                        <div class="import-instructions">
+                            <h4>📋 Importation de la liste des véhicules</h4>
+                            <p>Glissez-déposez votre fichier Excel (.xlsx) ou cliquez pour le sélectionner</p>
+                            <div class="import-template">
+                                <div class="template-row template-header">Format attendu du fichier Excel :</div>
+                                <div class="template-row">Colonne A : Immatriculation (ex: AB-123-CD)</div>
+                                <div class="template-row">Colonne B : Marque (ex: Peugeot)</div>
+                                <div class="template-row">Colonne C : Modèle (ex: 308)</div>
+                            </div>
+                        </div>
+                        
+                        <div class="file-input-wrapper">
+                            <input type="file" id="vehicleListFile" accept=".xlsx,.xls" onchange="handleVehicleListFile(this)">
+                            <label for="vehicleListFile" class="file-input-label">
+                                📂 Sélectionner le fichier Excel
+                            </label>
+                        </div>
+                        
+                        <div style="margin-top: 15px;">
+                            <button class="btn btn-success" onclick="importVehicleList()" id="importBtn" disabled>
+                                ⬆️ Importer la liste
+                            </button>
+                            <button class="btn btn-danger" onclick="clearVehicleList()">
+                                🗑️ Vider la liste
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Statistiques d'avancement -->
+                    <div class="progress-stats" id="progressStats" style="display: none;">
+                        <div class="stat-card total">
+                            <div class="stat-number" id="totalVehicles">0</div>
+                            <div class="stat-label">Total véhicules</div>
+                        </div>
+                        <div class="stat-card done">
+                            <div class="stat-number" id="controlledVehicles">0</div>
+                            <div class="stat-label">Contrôlés</div>
+                        </div>
+                        <div class="stat-card pending">
+                            <div class="stat-number" id="pendingVehicles">0</div>
+                            <div class="stat-label">En attente</div>
+                        </div>
+                        <div class="stat-card percent">
+                            <div class="stat-number" id="completionPercent">0%</div>
+                            <div class="stat-label">Avancement</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Liste des véhicules -->
+                    <div id="vehicleListContainer" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h4>🚗 Liste des véhicules</h4>
+                            <button class="btn btn-success" onclick="exportProgressToExcel()">
+                                📊 Exporter le suivi
+                            </button>
+                        </div>
+                        
+                        <div class="search-bar">
+                            <input type="text" id="vehicleSearchInput" placeholder="🔍 Rechercher un véhicule..." onkeyup="filterVehicleList()">
+                        </div>
+                        
+                        <div id="vehicleList" class="vehicle-list">
+                            <!-- Liste des véhicules sera générée ici -->
+                        </div>
+                    </div>
+
+                    <div id="progressStatus"></div>
+                </div>
+            </div>
+
+            <!-- Onglet Sauvegarde -->
+            <div id="sauvegarde" class="tab-content">
+                <div style="padding: 20px;">
+                    <h3>💾 Gestion des sauvegardes</h3>
+                    <p style="margin: 15px 0; color: #6c757d;">
+                        Protégez vos données en créant des sauvegardes régulières. Ces fichiers peuvent être sauvegardés dans C:\Users\Public ou tout autre emplacement de votre choix.
+                    </p>
+
+                    <!-- Sauvegarde automatique -->
+                    <div class="backup-section">
+                        <h4>🔄 Sauvegarde automatique</h4>
+                        <p style="margin-bottom: 15px; color: #6c757d;">
+                            Une sauvegarde automatique est créée à chaque modification des données.
+                        </p>
+                        <div class="backup-controls">
+                            <div>
+                                <button class="btn btn-info" onclick="downloadAutoBackup()">
+                                    📋 Télécharger la sauvegarde auto
+                                </button>
+                            </div>
+                            <div id="autoBackupStatus"></div>
+                        </div>
+                    </div>
+
+                    <!-- Sauvegarde manuelle -->
+                    <div class="backup-section">
+                        <h4>💾 Sauvegarde manuelle</h4>
+                        <p style="margin-bottom: 15px; color: #6c757d;">
+                            Créez une sauvegarde complète de toutes vos données.
+                        </p>
+                        <div class="backup-controls">
+                            <div>
+                                <button class="btn btn-success" onclick="createManualBackup()">
+                                    💾 Créer une sauvegarde
+                                </button>
+                            </div>
+                            <div id="manualBackupStatus"></div>
+                        </div>
+                    </div>
+
+                    <!-- Restauration -->
+                    <div class="backup-section">
+                        <h4>📂 Restaurer une sauvegarde</h4>
+                        <div class="warning-message" style="margin-bottom: 15px;">
+                            ⚠️ Attention : La restauration effacera toutes les données actuelles et les remplacera par celles du fichier de sauvegarde.
+                        </div>
+                        <div class="backup-controls">
+                            <div class="file-input-wrapper">
+                                <input type="file" id="backupFile" accept=".json" onchange="handleBackupFile(this)">
+                                <label for="backupFile" class="file-input-label">
+                                    📁 Sélectionner un fichier de sauvegarde
+                                </label>
+                            </div>
+                            <div>
+                                <button class="btn btn-warning" onclick="restoreBackup()" id="restoreBtn" disabled>
+                                    🔄 Restaurer la sauvegarde
+                                </button>
+                            </div>
+                        </div>
+                        <div id="restoreStatus"></div>
+                    </div>
+
+                    <!-- Informations -->
+                    <div class="info-message">
+                        <h5>💡 Conseils pour la sauvegarde :</h5>
+                        <ul style="margin: 10px 0 0 20px;">
+                            <li>Effectuez des sauvegardes régulières (quotidiennes ou hebdomadaires)</li>
+                            <li>Conservez plusieurs copies de sauvegarde à différents endroits</li>
+                            <li>Testez vos sauvegardes en les restaurant sur un autre appareil</li>
+                            <li>Les fichiers de sauvegarde sont au format JSON et contiennent toutes vos données</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet Export -->
+            <div id="export" class="tab-content">
+                <div style="text-align: center; padding: 40px;">
+                    <h3>📊 Exporter les données</h3>
+                    <p style="margin: 20px 0;">Téléchargez tous les contrôles au format Excel (XLSX)</p>
+                    <div class="loading" id="exportLoading">
+                        <div class="spinner"></div>
+                        <p>Génération du fichier Excel...</p>
+                    </div>
+                    <button class="btn btn-success" onclick="exportToExcel()">📥 Télécharger Excel</button>
+                    <div id="exportStatus"></div>
+                </div>
+            </div>
+
+            <!-- Onglet Export PDF -->
+            <div id="pdf" class="tab-content">
+                <div style="padding: 20px;">
+                    <h3>📄 Export PDF des contrôles</h3>
+                    <p style="margin: 15px 0; color: #6c757d;">
+                        Générez des rapports PDF individuels pour chaque contrôle avec filtre par période.
+                        <strong>Format A4 paysage optimisé avec photos haute qualité.</strong>
+                    </p>
+
+                    <!-- Filtres -->
+                    <div class="pdf-filters">
+                        <h4>📅 Filtres de période</h4>
+                        <div class="date-filters">
+                            <div class="form-group">
+                                <label for="pdfDateDebut">Date de début</label>
+                                <input type="date" id="pdfDateDebut" name="pdfDateDebut">
+                            </div>
+                            <div class="form-group">
+                                <label for="pdfDateFin">Date de fin</label>
+                                <input type="date" id="pdfDateFin" name="pdfDateFin">
+                            </div>
+                            <div class="form-group" style="display: flex; align-items: end;">
+                                <button class="btn btn-primary" onclick="filterControlsForPDF()">
+                                    🔍 Filtrer les contrôles
+                                </button>
+                            </div>
+                            <div class="form-group" style="display: flex; align-items: end;">
+                                <button class="btn btn-success" onclick="generateAllPDFs()" id="generateAllBtn" disabled>
+                                    📄 Générer tous les PDFs
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Résultats -->
+                    <div id="pdfResults" class="pdf-results" style="display: none;">
+                        <h4>📋 Contrôles trouvés</h4>
+                        <div id="pdfControlsList"></div>
+                    </div>
+
+                    <div class="loading" id="pdfLoading">
+                        <div class="spinner"></div>
+                        <p>Génération du PDF en cours...</p>
+                    </div>
+
+                    <div id="pdfStatus"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera Modal (en dehors du formulaire) -->
+    <div id="cameraModal" class="camera-modal" style="display: none;">
+        <div class="camera-content">
+            <div class="camera-header">
+                <h4>📸 Prendre une photo</h4>
+                <button type="button" class="btn btn-danger" onclick="closeCamera()">✖ Fermer</button>
+            </div>
+            <div class="camera-body">
+                <video id="cameraVideo" autoplay playsinline></video>
+                <canvas id="photoCanvas" style="display: none;"></canvas>
+            </div>
+            <div class="camera-footer">
+                <button type="button" class="btn btn-primary" onclick="takePhoto()">
+                    📸 Capturer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Gestion de la base de données IndexedDB
+        let db;
+        const DB_NAME = 'GazServiceVehicules';
+        const DB_VERSION = 2; // Version incrémentée pour les nouvelles tables
+        const STORE_NAME = 'controles';
+        const VEHICLE_STORE_NAME = 'vehicules'; // Nouvelle table pour les véhicules
+        let selectedBackupFile = null;
+
+        // Variables pour la gestion des photos
+        let currentPhotos = [];
+        let cameraStream = null;
+        const MAX_PHOTOS = 5;
+
+        // Variables pour l'export PDF
+        let filteredControlsForPDF = [];
+
+        // Variables pour le suivi d'avancement
+        let vehicleList = [];
+        let selectedVehicleFile = null;
+
+        // Initialisation de la base de données
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+                    
+                    // Créer le store des contrôles s'il n'existe pas
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const store = db.createObjectStore(STORE_NAME, { 
+                            keyPath: 'id', 
+                            autoIncrement: true 
+                        });
+                        store.createIndex('immatriculation', 'immatriculation', { unique: false });
+                        store.createIndex('dateControle', 'dateControle', { unique: false });
+                        store.createIndex('conducteur', 'conducteur', { unique: false });
+                    }
+                    
+                    // Créer le store des véhicules pour le suivi
+                    if (!db.objectStoreNames.contains(VEHICLE_STORE_NAME)) {
+                        const vehicleStore = db.createObjectStore(VEHICLE_STORE_NAME, { 
+                            keyPath: 'immatriculation'
+                        });
+                        vehicleStore.createIndex('marque', 'marque', { unique: false });
+                        vehicleStore.createIndex('modele', 'modele', { unique: false });
+                    }
+                };
+            });
+        }
+
+        // === FONCTIONS DE GESTION DES VÉHICULES POUR LE SUIVI ===
+
+        // Sauvegarder la liste des véhicules
+        function saveVehicleList(vehicles) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([VEHICLE_STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(VEHICLE_STORE_NAME);
+                
+                // Vider la liste existante
+                const clearRequest = store.clear();
+                
+                clearRequest.onsuccess = () => {
+                    let processed = 0;
+                    
+                    vehicles.forEach(vehicle => {
+                        const addRequest = store.add(vehicle);
+                        addRequest.onsuccess = () => {
+                            processed++;
+                            if (processed === vehicles.length) {
+                                resolve();
+                                createAutoBackup();
+                            }
+                        };
+                        addRequest.onerror = () => reject(addRequest.error);
+                    });
+                    
+                    if (vehicles.length === 0) {
+                        resolve();
+                    }
+                };
+                
+                clearRequest.onerror = () => reject(clearRequest.error);
+            });
+        }
+
+        // Récupérer la liste des véhicules
+        function getVehicleList() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([VEHICLE_STORE_NAME], 'readonly');
+                const store = transaction.objectStore(VEHICLE_STORE_NAME);
+                const request = store.getAll();
+                
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Vider la liste des véhicules
+        function clearVehicleListFromDB() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([VEHICLE_STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(VEHICLE_STORE_NAME);
+                const request = store.clear();
+                
+                request.onsuccess = () => {
+                    resolve();
+                    createAutoBackup();
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Gérer la sélection du fichier Excel des véhicules
+        function handleVehicleListFile(input) {
+            const importBtn = document.getElementById('importBtn');
+            const statusEl = document.getElementById('progressStatus');
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+                    statusEl.innerHTML = '<div class="error-message">Veuillez sélectionner un fichier Excel (.xlsx ou .xls)</div>';
+                    importBtn.disabled = true;
+                    return;
+                }
+                
+                selectedVehicleFile = file;
+                importBtn.disabled = false;
+                statusEl.innerHTML = `<div class="info-message">Fichier sélectionné : ${file.name}</div>`;
+            } else {
+                selectedVehicleFile = null;
+                importBtn.disabled = true;
+                statusEl.innerHTML = '';
+            }
+        }
+
+        // Importer la liste des véhicules depuis Excel
+        async function importVehicleList() {
+            if (!selectedVehicleFile) {
+                return;
+            }
+            
+            const statusEl = document.getElementById('progressStatus');
+            
+            try {
+                statusEl.innerHTML = '<div class="info-message">Lecture du fichier Excel...</div>';
+                
+                // Lire le fichier Excel
+                const arrayBuffer = await readFileAsArrayBuffer(selectedVehicleFile);
+                const workbook = XLSX.read(arrayBuffer);
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                // Convertir en JSON
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                if (jsonData.length < 2) {
+                    throw new Error('Le fichier doit contenir au moins une ligne de données après l\'en-tête');
+                }
+                
+                // Traiter les données (ignorer la première ligne si c'est l'en-tête)
+                const vehicles = [];
+                const startRow = 0; // Commencer à la première ligne
+                
+                for (let i = startRow; i < jsonData.length; i++) {
+                    const row = jsonData[i];
+                    
+                    if (row[0] && row[0].toString().trim()) { // Si l'immatriculation existe
+                        const immatriculation = row[0].toString().trim().toUpperCase();
+                        const marque = row[1] ? row[1].toString().trim() : '';
+                        const modele = row[2] ? row[2].toString().trim() : '';
+                        
+                        // Valider le format d'immatriculation (format français)
+                        if (immatriculation.length > 0) {
+                            vehicles.push({
+                                immatriculation: immatriculation,
+                                marque: marque,
+                                modele: modele,
+                                dateImport: new Date().toISOString()
+                            });
+                        }
+                    }
+                }
+                
+                if (vehicles.length === 0) {
+                    throw new Error('Aucun véhicule valide trouvé dans le fichier');
+                }
+                
+                // Sauvegarder dans la base de données
+                await saveVehicleList(vehicles);
+                
+                // Actualiser l'affichage
+                await loadVehicleProgress();
+                
+                statusEl.innerHTML = `<div class="success-message">✅ ${vehicles.length} véhicule(s) importé(s) avec succès !</div>`;
+                
+                // Réinitialiser la sélection
+                document.getElementById('vehicleListFile').value = '';
+                document.getElementById('importBtn').disabled = true;
+                selectedVehicleFile = null;
+                
+            } catch (error) {
+                statusEl.innerHTML = `<div class="error-message">❌ Erreur lors de l'importation : ${error.message}</div>`;
+            }
+        }
+
+        // Lire un fichier comme ArrayBuffer
+        function readFileAsArrayBuffer(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = e => reject(new Error('Erreur de lecture du fichier'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // Charger et afficher le suivi d'avancement
+        async function loadVehicleProgress() {
+            try {
+                const vehicles = await getVehicleList();
+                const controls = await getAllControls();
+                
+                if (vehicles.length === 0) {
+                    document.getElementById('progressStats').style.display = 'none';
+                    document.getElementById('vehicleListContainer').style.display = 'none';
+                    return;
+                }
+                
+                // Calculer les statistiques
+                const totalVehicles = vehicles.length;
+                let controlledCount = 0;
+                
+                // Créer un map des contrôles par immatriculation (prendre le plus récent)
+                const controlMap = new Map();
+                controls.forEach(control => {
+                    const immat = control.immatriculation;
+                    if (!controlMap.has(immat) || new Date(control.dateControle) > new Date(controlMap.get(immat).dateControle)) {
+                        controlMap.set(immat, control);
+                    }
+                });
+                
+                // Vérifier chaque véhicule
+                const vehicleProgress = vehicles.map(vehicle => {
+                    const control = controlMap.get(vehicle.immatriculation);
+                    const isControlled = !!control;
+                    
+                    if (isControlled) {
+                        controlledCount++;
+                    }
+                    
+                    return {
+                        ...vehicle,
+                        isControlled: isControlled,
+                        lastControl: control || null
+                    };
+                });
+                
+                const pendingCount = totalVehicles - controlledCount;
+                const completionPercent = totalVehicles > 0 ? Math.round((controlledCount / totalVehicles) * 100) : 0;
+                
+                // Mettre à jour les statistiques
+                document.getElementById('totalVehicles').textContent = totalVehicles;
+                document.getElementById('controlledVehicles').textContent = controlledCount;
+                document.getElementById('pendingVehicles').textContent = pendingCount;
+                document.getElementById('completionPercent').textContent = completionPercent + '%';
+                document.getElementById('progressFill').style.width = completionPercent + '%';
+                
+                // Afficher les sections
+                document.getElementById('progressStats').style.display = 'grid';
+                document.getElementById('vehicleListContainer').style.display = 'block';
+                
+                // Afficher la liste des véhicules
+                displayVehicleList(vehicleProgress);
+                
+                vehicleList = vehicleProgress; // Stocker pour les filtres
+                
+            } catch (error) {
+                console.error('Erreur lors du chargement du suivi d\'avancement:', error);
+            }
+        }
+
+        // Afficher la liste des véhicules avec leur statut
+        function displayVehicleList(vehicles) {
+            const container = document.getElementById('vehicleList');
+            
+            if (vehicles.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <h3>Aucun véhicule dans la liste</h3>
+                        <p>Importez un fichier Excel pour commencer le suivi</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Trier par statut (non contrôlés en premier) puis par immatriculation
+            vehicles.sort((a, b) => {
+                if (a.isControlled !== b.isControlled) {
+                    return a.isControlled ? 1 : -1;
+                }
+                return a.immatriculation.localeCompare(b.immatriculation);
+            });
+            
+            container.innerHTML = vehicles.map(vehicle => {
+                const statusClass = vehicle.isControlled ? 'checked' : 'pending';
+                const statusIcon = vehicle.isControlled ? '✓' : '!';
+                const statusText = vehicle.isControlled ? 'Contrôlé' : 'En attente';
+                const lastControlDate = vehicle.lastControl ? 
+                    new Date(vehicle.lastControl.dateControle).toLocaleDateString('fr-FR') : 
+                    'Aucun contrôle';
+                
+                return `
+                    <div class="vehicle-item ${statusClass}">
+                        <div class="vehicle-info">
+                            <div class="vehicle-immat">${vehicle.immatriculation}</div>
+                            <div class="vehicle-details">
+                                ${vehicle.marque} ${vehicle.modele}
+                                ${vehicle.lastControl ? ` - Conducteur: ${vehicle.lastControl.conducteur}` : ''}
+                            </div>
+                            <div class="last-control-date">Dernier contrôle: ${lastControlDate}</div>
+                        </div>
+                        <div class="vehicle-status">
+                            <div class="status-icon ${vehicle.isControlled ? 'done' : 'pending'}">${statusIcon}</div>
+                            <span>${statusText}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Filtrer la liste des véhicules
+        function filterVehicleList() {
+            const searchTerm = document.getElementById('vehicleSearchInput').value.toLowerCase();
+            const vehicleItems = document.querySelectorAll('.vehicle-item');
+            
+            vehicleItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+            });
+        }
+
+        // Vider la liste des véhicules
+        async function clearVehicleList() {
+            if (confirm('Êtes-vous sûr de vouloir vider la liste des véhicules ?')) {
+                try {
+                    await clearVehicleListFromDB();
+                    await loadVehicleProgress();
+                    showMessage('success', '✅ Liste des véhicules vidée avec succès');
+                } catch (error) {
+                    showMessage('error', '❌ Erreur lors de la suppression : ' + error.message);
+                }
+            }
+        }
+
+        // Exporter le suivi d'avancement vers Excel
+        async function exportProgressToExcel() {
+            try {
+                const vehicles = await getVehicleList();
+                const controls = await getAllControls();
+                
+                if (vehicles.length === 0) {
+                    showMessage('warning', 'Aucune donnée à exporter');
+                    return;
+                }
+                
+                // Créer un map des contrôles par immatriculation
+                const controlMap = new Map();
+                controls.forEach(control => {
+                    const immat = control.immatriculation;
+                    if (!controlMap.has(immat) || new Date(control.dateControle) > new Date(controlMap.get(immat).dateControle)) {
+                        controlMap.set(immat, control);
+                    }
+                });
+                
+                // Préparer les données pour Excel
+                const excelData = vehicles.map(vehicle => {
+                    const control = controlMap.get(vehicle.immatriculation);
+                    
+                    return {
+                        'Immatriculation': vehicle.immatriculation,
+                        'Marque': vehicle.marque,
+                        'Modèle': vehicle.modele,
+                        'Statut': control ? 'Contrôlé' : 'En attente',
+                        'Date dernier contrôle': control ? control.dateControle : '',
+                        'Conducteur': control ? control.conducteur : '',
+                        'Kilométrage': control ? control.kilometrage || '' : '',
+                        'Prochain CT': control ? control.prochainControle || '' : '',
+                        'Dernière révision (km)': control ? control.derniereRevision || '' : '',
+                        'Date import véhicule': new Date(vehicle.dateImport).toLocaleDateString('fr-FR')
+                    };
+                });
+                
+                // Calculer les statistiques pour une feuille de résumé
+                const totalVehicles = vehicles.length;
+                const controlledCount = excelData.filter(v => v.Statut === 'Contrôlé').length;
+                const pendingCount = totalVehicles - controlledCount;
+                const completionPercent = totalVehicles > 0 ? Math.round((controlledCount / totalVehicles) * 100) : 0;
+                
+                const summaryData = [
+                    ['Statistique', 'Valeur'],
+                    ['Total véhicules', totalVehicles],
+                    ['Véhicules contrôlés', controlledCount],
+                    ['Véhicules en attente', pendingCount],
+                    ['Pourcentage d\'avancement', completionPercent + '%'],
+                    ['Date d\'export', new Date().toLocaleDateString('fr-FR')]
+                ];
+                
+                // Créer le workbook avec deux feuilles
+                const wb = XLSX.utils.book_new();
+                
+                // Feuille de résumé
+                const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+                XLSX.utils.book_append_sheet(wb, wsSummary, 'Résumé');
+                
+                // Feuille détaillée
+                const wsDetail = XLSX.utils.json_to_sheet(excelData);
+                
+                // Ajuster la largeur des colonnes
+                const colWidths = [];
+                Object.keys(excelData[0]).forEach(key => {
+                    const maxLength = Math.max(
+                        key.length,
+                        ...excelData.map(row => String(row[key] || '').length)
+                    );
+                    colWidths.push({ width: Math.min(maxLength + 2, 50) });
+                });
+                wsDetail['!cols'] = colWidths;
+                
+                XLSX.utils.book_append_sheet(wb, wsDetail, 'Détail véhicules');
+                
+                // Générer et télécharger le fichier
+                const fileName = `Suivi_Avancement_GazService_${new Date().toISOString().split('T')[0]}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+                
+                showMessage('success', `✅ Fichier "${fileName}" téléchargé avec succès !`);
+                
+            } catch (error) {
+                showMessage('error', '❌ Erreur lors de l\'export : ' + error.message);
+            }
+        }
+
+        // === FONCTIONS DE GESTION DES CONTRÔLES (EXISTANTES) ===
+
+        // Sauvegarder un contrôle
+        function saveControl(data) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.add(data);
+                
+                request.onsuccess = () => {
+                    resolve(request.result);
+                    // Créer une sauvegarde automatique après chaque ajout
+                    createAutoBackup();
+                    // Mettre à jour le suivi d'avancement si on est sur cet onglet
+                    if (document.getElementById('avancement').classList.contains('active')) {
+                        loadVehicleProgress();
+                    }
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Récupérer tous les contrôles
+        function getAllControls() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+                
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Supprimer un contrôle
+        function deleteControl(id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.delete(id);
+                
+                request.onsuccess = () => {
+                    resolve();
+                    // Créer une sauvegarde automatique après chaque suppression
+                    createAutoBackup();
+                    // Mettre à jour le suivi d'avancement si on est sur cet onglet
+                    if (document.getElementById('avancement').classList.contains('active')) {
+                        loadVehicleProgress();
+                    }
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Vider toute la base de données
+        function clearAllData() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.clear();
+                
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // === FONCTIONS DE GESTION DES PHOTOS ===
+
+        // Ouvrir la caméra
+        async function openCamera() {
+            if (currentPhotos.length >= MAX_PHOTOS) {
+                showMessage('warning', `Vous avez déjà atteint la limite de ${MAX_PHOTOS} photos par contrôle`);
+                return;
+            }
+
+            try {
+                const modal = document.getElementById('cameraModal');
+                const video = document.getElementById('cameraVideo');
+                
+                // Demander l'accès à la caméra
+                cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: 'environment' // Caméra arrière par défaut
+                    } 
+                });
+                
+                video.srcObject = cameraStream;
+                modal.style.display = 'flex';
+                
+            } catch (error) {
+                console.error('Erreur d\'accès à la caméra:', error);
+                showMessage('error', 'Impossible d\'accéder à la caméra. Vérifiez les permissions de votre navigateur.');
+            }
+        }
+
+        // Fermer la caméra
+        function closeCamera() {
+            const modal = document.getElementById('cameraModal');
+            const video = document.getElementById('cameraVideo');
+            
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            
+            video.srcObject = null;
+            modal.style.display = 'none';
+        }
+
+        // Prendre une photo
+        function takePhoto() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('photoCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Définir les dimensions du canvas
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Dessiner l'image du video sur le canvas
+            ctx.drawImage(video, 0, 0);
+            
+            // Convertir en base64 avec compression
+            const imageData = canvas.toDataURL('image/jpeg', 0.8);
+            
+            // Ajouter la photo à la liste
+            const photoObj = {
+                id: Date.now() + Math.random(),
+                data: imageData,
+                timestamp: new Date().toISOString()
+            };
+            
+            currentPhotos.push(photoObj);
+            updatePhotoPreview();
+            closeCamera();
+            
+            showMessage('success', `Photo ${currentPhotos.length}/${MAX_PHOTOS} ajoutée avec succès`);
+        }
+
+        // Mettre à jour l'aperçu des photos
+        function updatePhotoPreview() {
+            const preview = document.getElementById('photoPreview');
+            const counter = document.getElementById('photoCount');
+            const cameraBtn = document.getElementById('cameraBtn');
+            
+            // Mettre à jour le compteur
+            counter.textContent = `${currentPhotos.length}/${MAX_PHOTOS} photos`;
+            
+            // Désactiver le bouton si limite atteinte
+            if (currentPhotos.length >= MAX_PHOTOS) {
+                cameraBtn.disabled = true;
+                cameraBtn.textContent = '📱 Limite atteinte (5/5)';
+                cameraBtn.style.opacity = '0.6';
+            } else {
+                cameraBtn.disabled = false;
+                cameraBtn.textContent = '📱 Prendre une photo';
+                cameraBtn.style.opacity = '1';
+            }
+            
+            // Afficher les photos
+            preview.innerHTML = currentPhotos.map((photo, index) => `
+                <div class="photo-item">
+                    <img src="${photo.data}" alt="Photo ${index + 1}" onclick="viewPhoto('${photo.data}')">
+                    <button class="photo-delete" onclick="deletePhoto('${photo.id}')" title="Supprimer cette photo">×</button>
+                </div>
+            `).join('');
+        }
+
+        // Supprimer une photo
+        function deletePhoto(photoId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette photo ?')) {
+                currentPhotos = currentPhotos.filter(photo => photo.id !== photoId);
+                updatePhotoPreview();
+                showMessage('success', 'Photo supprimée');
+            }
+        }
+
+        // Visualiser une photo en grand
+        function viewPhoto(imageData) {
+            const modal = document.createElement('div');
+            modal.className = 'photo-viewer-modal';
+            modal.innerHTML = `
+                <div class="photo-viewer-content">
+                    <button class="photo-viewer-close" onclick="this.parentElement.parentElement.remove()">×</button>
+                    <img src="${imageData}" alt="Photo agrandie" class="photo-viewer-image">
+                </div>
+            `;
+            
+            // Fermer au clic sur le fond
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+            
+            document.body.appendChild(modal);
+        }
+
+        // Réinitialiser les photos
+        function resetPhotos() {
+            currentPhotos = [];
+            updatePhotoPreview();
+        }
+
+        // === FONCTIONS PDF AMÉLIORÉES ===
+
+        // Filtrer les contrôles pour l'export PDF
+        async function filterControlsForPDF() {
+            const dateDebut = document.getElementById('pdfDateDebut').value;
+            const dateFin = document.getElementById('pdfDateFin').value;
+            const resultsDiv = document.getElementById('pdfResults');
+            const listDiv = document.getElementById('pdfControlsList');
+            const generateAllBtn = document.getElementById('generateAllBtn');
+            const statusDiv = document.getElementById('pdfStatus');
+
+            try {
+                statusDiv.innerHTML = '<div class="info-message">Recherche des contrôles...</div>';
+                
+                const allControls = await getAllControls();
+                
+                // Filtrer par dates si spécifiées
+                let filtered = allControls;
+                
+                if (dateDebut) {
+                    filtered = filtered.filter(control => control.dateControle >= dateDebut);
+                }
+                
+                if (dateFin) {
+                    filtered = filtered.filter(control => control.dateControle <= dateFin);
+                }
+                
+                // Trier par date décroissante
+                filtered.sort((a, b) => new Date(b.dateControle) - new Date(a.dateControle));
+                
+                filteredControlsForPDF = filtered;
+                
+                if (filtered.length === 0) {
+                    statusDiv.innerHTML = '<div class="warning-message">Aucun contrôle trouvé pour cette période</div>';
+                    resultsDiv.style.display = 'none';
+                    generateAllBtn.disabled = true;
+                    return;
+                }
+                
+                // Afficher les résultats
+                listDiv.innerHTML = filtered.map(control => `
+                    <div class="pdf-control-item">
+                        <div class="pdf-control-info">
+                            <strong>${control.immatriculation} - ${control.conducteur}</strong><br>
+                            <small>Date: ${new Date(control.dateControle).toLocaleDateString('fr-FR')}</small>
+                            ${control.photos && control.photos.length > 0 ? ` - ${control.photos.length} photo(s)` : ''}
+                        </div>
+                        <div class="pdf-control-actions">
+                            <button class="btn btn-info" onclick="generateSinglePDF(${control.id})" style="padding: 8px 15px; font-size: 0.9rem;">
+                                📄 Générer PDF
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                resultsDiv.style.display = 'block';
+                generateAllBtn.disabled = false;
+                statusDiv.innerHTML = `<div class="success-message">${filtered.length} contrôle(s) trouvé(s)</div>`;
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error-message">Erreur lors de la recherche: ${error.message}</div>`;
+            }
+        }
+
+        // Générer un PDF pour un contrôle spécifique
+        async function generateSinglePDF(controlId) {
+            const loadingEl = document.getElementById('pdfLoading');
+            const statusEl = document.getElementById('pdfStatus');
+            
+            try {
+                loadingEl.style.display = 'block';
+                
+                // Récupérer le contrôle
+                const controls = await getAllControls();
+                const control = controls.find(c => c.id === controlId);
+                
+                if (!control) {
+                    throw new Error('Contrôle introuvable');
+                }
+                
+                await createImprovedPDFDocument(control);
+                
+                statusEl.innerHTML = '<div class="success-message">PDF généré avec succès!</div>';
+                
+            } catch (error) {
+                statusEl.innerHTML = `<div class="error-message">Erreur lors de la génération: ${error.message}</div>`;
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        // Générer tous les PDFs des contrôles filtrés
+        async function generateAllPDFs() {
+            if (filteredControlsForPDF.length === 0) {
+                showMessage('warning', 'Aucun contrôle sélectionné');
+                return;
+            }
+
+            const loadingEl = document.getElementById('pdfLoading');
+            const statusEl = document.getElementById('pdfStatus');
+            
+            try {
+                loadingEl.style.display = 'block';
+                statusEl.innerHTML = '<div class="info-message">Génération en cours...</div>';
+                
+                for (let i = 0; i < filteredControlsForPDF.length; i++) {
+                    const control = filteredControlsForPDF[i];
+                    statusEl.innerHTML = `<div class="info-message">Génération du PDF ${i + 1}/${filteredControlsForPDF.length}: ${control.immatriculation}</div>`;
+                    
+                    await createImprovedPDFDocument(control);
+                    
+                    // Petite pause pour ne pas surcharger le navigateur
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+                
+                statusEl.innerHTML = `<div class="success-message">✅ ${filteredControlsForPDF.length} PDF(s) générés avec succès!</div>`;
+                
+            } catch (error) {
+                statusEl.innerHTML = `<div class="error-message">Erreur lors de la génération: ${error.message}</div>`;
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        // Créer le document PDF amélioré (format paysage avec photos optimisées)
+        async function createImprovedPDFDocument(control) {
+            const { jsPDF } = window.jspdf;
+            
+            // Créer le contenu HTML pour le PDF
+            const pdfContent = createImprovedPDFContent(control);
+            
+            // Créer un conteneur temporaire pour le rendu
+            const tempDiv = document.createElement('div');
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.left = '-9999px';
+            tempDiv.style.top = '0';
+            tempDiv.style.width = '297mm'; // A4 paysage width
+            tempDiv.style.backgroundColor = 'white';
+            tempDiv.innerHTML = pdfContent;
+            document.body.appendChild(tempDiv);
+            
+            try {
+                // Générer le PDF avec html2canvas en haute qualité
+                const canvas = await html2canvas(tempDiv, {
+                    scale: 2, // Haute qualité
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    width: tempDiv.scrollWidth,
+                    height: tempDiv.scrollHeight,
+                    x: 0,
+                    y: 0
+                });
+                
+                // Créer le PDF en format paysage (landscape)
+                const pdf = new jsPDF('l', 'mm', 'a4'); // 'l' = landscape
+                
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 297; // A4 paysage width in mm
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                // Ajouter l'image au PDF
+                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                
+                // Si le contenu est trop haut, ajouter des pages
+                if (imgHeight > 210) { // A4 paysage height
+                    let position = -210;
+                    while (position + imgHeight > 0) {
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        position -= 210;
+                    }
+                }
+                
+                // Télécharger le PDF
+                const fileName = `Controle_${control.immatriculation}_${control.dateControle}.pdf`;
+                pdf.save(fileName);
+                
+            } finally {
+                // Nettoyer
+                document.body.removeChild(tempDiv);
+            }
+        }
+
+        // Créer le contenu HTML amélioré pour le PDF
+        function createImprovedPDFContent(control) {
+            const formatDate = (dateStr) => {
+                if (!dateStr) return 'Non renseigné';
+                return new Date(dateStr).toLocaleDateString('fr-FR');
+            };
+            
+            const formatKilometrage = (km) => {
+                if (!km) return 'N/A';
+                return km + ' km';
+            };
+            
+            const getStatusText = (value, type = 'boolean') => {
+                if (type === 'boolean') {
+                    return value ? '✓ Présent' : '✗ Absent';
+                } else {
+                    return value.charAt(0).toUpperCase() + value.slice(1);
+                }
+            };
+
+            const getStatusClass = (value, type = 'boolean') => {
+                if (type === 'boolean') {
+                    return value ? 'pdf-status status-ok' : 'pdf-status status-missing';
+                } else {
+                    return `pdf-status status-${value}`;
+                }
+            };
+
+            // Section commentaires
+            const commentairesSection = control.commentaires && control.commentaires.trim() ? `
+                <div class="pdf-section pdf-comments-section">
+                    <div class="pdf-section-title">💬 Commentaires et observations</div>
+                    <div class="pdf-comments-content">${control.commentaires}</div>
+                </div>
+            ` : '';
+
+            // Section photos améliorée avec grille 3x2
+            const photosSection = control.photos && control.photos.length > 0 ? `
+                <div class="pdf-photos-section">
+                    <div class="pdf-photos-title">📸 Photos du contrôle (${control.photos.length})</div>
+                    <div class="pdf-photos-grid">
+                        ${control.photos.slice(0, 6).map((photo, index) => `
+                            <div class="pdf-photo-container">
+                                <img src="${photo.data}" alt="Photo ${index + 1}" class="pdf-photo">
+                                <div class="pdf-photo-caption">Photo ${index + 1} - ${new Date(photo.timestamp).toLocaleString('fr-FR')}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ${control.photos.length > 6 ? `<p style="margin-top: 15px; text-align: center; font-style: italic; color: #6c757d;">+ ${control.photos.length - 6} photo(s) supplémentaire(s) disponibles</p>` : ''}
+                </div>
+            ` : '';
+            
+            return `
+                <div class="pdf-page">
+                    <div class="pdf-document-header">
+                        <div class="pdf-company-logo">🚗 GAZ SERVICE</div>
+                        <div class="pdf-document-title">RAPPORT DE CONTRÔLE VÉHICULE</div>
+                        <div class="pdf-subtitle">Contrôle et maintenance des véhicules de service</div>
+                    </div>
+                    
+                    <div class="pdf-vehicle-info">
+                        <div class="pdf-vehicle-title">Véhicule ${control.immatriculation} - ${control.conducteur}</div>
+                        <div class="pdf-control-date">Contrôle effectué le ${formatDate(control.dateControle)}</div>
+                    </div>
+                    
+                    <div class="pdf-info-grid">
+                        <div class="pdf-info-item">
+                            <div class="pdf-info-label">Kilométrage</div>
+                            <div class="pdf-info-value">${formatKilometrage(control.kilometrage)}</div>
+                        </div>
+                        <div class="pdf-info-item">
+                            <div class="pdf-info-label">Prochain CT</div>
+                            <div class="pdf-info-value">${formatDate(control.prochainControle)}</div>
+                        </div>
+                        <div class="pdf-info-item">
+                            <div class="pdf-info-label">Dernière révision</div>
+                            <div class="pdf-info-value">${formatKilometrage(control.derniereRevision)}</div>
+                        </div>
+                        <div class="pdf-info-item">
+                            <div class="pdf-info-label">Date de création</div>
+                            <div class="pdf-info-value">${formatDate(control.dateCreation)}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="pdf-sections-container">
+                        <div class="pdf-section">
+                            <div class="pdf-section-title">📋 Documents obligatoires</div>
+                            <div class="pdf-items-grid">
+                                <div class="pdf-item">
+                                    <span class="pdf-label">Permis de conduire</span>
+                                    <span class="${getStatusClass(control.permis)}">${getStatusText(control.permis)}</span>
+                                </div>
+                                <div class="pdf-item">
+                                    <span class="pdf-label">Carte verte</span>
+                                    <span class="${getStatusClass(control.carteVerte)}">${getStatusText(control.carteVerte)}</span>
+                                </div>
+                                <div class="pdf-item">
+                                    <span class="pdf-label">Carte grise</span>
+                                    <span class="${getStatusClass(control.carteGrise)}">${getStatusText(control.carteGrise)}</span>
+                                </div>
+                                <div class="pdf-item">
+                                    <span class="pdf-label">Carte carburant</span>
+                                    <span class="${getStatusClass(control.carteCarburant)}">${getStatusText(control.carteCarburant)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="pdf-section">
+                            <div class="pdf-section-title">🛡️ Équipements de sécurité</div>
+                            <div class="pdf-items-grid">
+                                <div class="pdf-item">
+                                    <span class="pdf-label">Gilet jaune</span>
+                                    <span class="${getStatusClass(control.giletJaune)}">${getStatusText(control.giletJaune)}</span>
+                                </div>
+                                <div class="pdf-item">
+                                    <span class="pdf-label">Triangle</span>
+                                    <span class="${getStatusClass(control.triangle)}">${getStatusText(control.triangle)}</span>
+                                </div>
+                                <div class="pdf-item">
+                                    <span class="pdf-label">Roue de secours</span>
+                                    <span class="${getStatusClass(control.roueSecours)}">${getStatusText(control.roueSecours)}</span>
+                                </div>
+                                <div class="pdf-item">
+                                    <span class="pdf-label">Trousse de secours</span>
+                                    <span class="${getStatusClass(control.trousseSecours)}">${getStatusText(control.trousseSecours)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="pdf-section">
+                            <div class="pdf-section-title">🔧 État général</div>
+                            <div class="pdf-items-grid">
+                                <div class="pdf-item">
+                                    <span class="pdf-label">Rangement</span>
+                                    <span class="${getStatusClass(control.etatRangement, 'state')}">${getStatusText(control.etatRangement, 'state')}</span>
+                                </div>
+                                <div class="pdf-item">
+                                    <span class="pdf-label">Propreté int.</span>
+                                    <span class="${getStatusClass(control.propretéInterieur, 'state')}">${getStatusText(control.propretéInterieur, 'state')}</span>
+                                </div>
+                                <div class="pdf-item">
+                                    <span class="pdf-label">Propreté ext.</span>
+                                    <span class="${getStatusClass(control.propretéExterieur, 'state')}">${getStatusText(control.propretéExterieur, 'state')}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="pdf-section">
+                            <div class="pdf-section-title">🛞 État des pneus</div>
+                            <div class="pdf-items-grid">
+                                <div class="pdf-item">
+                                    <span class="pdf-label">Avant gauche</span>
+                                    <span class="${getStatusClass(control.pneuAvantGauche, 'state')}">${getStatusText(control.pneuAvantGauche, 'state')}</span>
+                                </div>
+                                <div class="pdf-item">
+                                    <span class="pdf-label">Avant droit</span>
+                                    <span class="${getStatusClass(control.pneuAvantDroit, 'state')}">${getStatusText(control.pneuAvantDroit, 'state')}</span>
+                                </div>
+                                <div class="pdf-item">
+                                    <span class="pdf-label">Arrière gauche</span>
+                                    <span class="${getStatusClass(control.pneuArriereGauche, 'state')}">${getStatusText(control.pneuArriereGauche, 'state')}</span>
+                                </div>
+                                <div class="pdf-item">
+                                    <span class="pdf-label">Arrière droit</span>
+                                    <span class="${getStatusClass(control.pneuArriereDroit, 'state')}">${getStatusText(control.pneuArriereDroit, 'state')}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${commentairesSection}
+                    </div>
+                    
+                    ${photosSection}
+                    
+                    <div class="pdf-footer">
+                        Rapport généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')} | 
+                        Gaz Service - Système de suivi des véhicules | 
+                        Page 1
+                    </div>
+                </div>
+            `;
+        }
+
+        // === FONCTIONS DE SAUVEGARDE ===
+
+        // Créer une sauvegarde automatique (silencieuse)
+        async function createAutoBackup() {
+            try {
+                const controls = await getAllControls();
+                const vehicles = await getVehicleList();
+                
+                const backupData = {
+                    version: '2.0',
+                    timestamp: new Date().toISOString(),
+                    type: 'auto',
+                    data: {
+                        controls: controls,
+                        vehicles: vehicles
+                    }
+                };
+                
+                // Stocker en localStorage comme sauvegarde de secours
+                localStorage.setItem('gazservice_auto_backup', JSON.stringify(backupData));
+                
+            } catch (error) {
+                console.error('Erreur lors de la sauvegarde automatique:', error);
+            }
+        }
+
+        // Télécharger la sauvegarde automatique
+        function downloadAutoBackup() {
+            const statusEl = document.getElementById('autoBackupStatus');
+            
+            try {
+                const backupData = localStorage.getItem('gazservice_auto_backup');
+                
+                if (!backupData) {
+                    statusEl.innerHTML = '<div class="error-message">Aucune sauvegarde automatique disponible</div>';
+                    return;
+                }
+                
+                const data = JSON.parse(backupData);
+                const filename = `GazService_AutoBackup_${new Date().toISOString().split('T')[0]}.json`;
+                
+                downloadJSON(data, filename);
+                statusEl.innerHTML = '<div class="success-message">Sauvegarde automatique téléchargée avec succès</div>';
+                
+            } catch (error) {
+                statusEl.innerHTML = '<div class="error-message">Erreur lors du téléchargement : ' + error.message + '</div>';
+            }
+        }
+
+        // Créer une sauvegarde manuelle
+        async function createManualBackup() {
+            const statusEl = document.getElementById('manualBackupStatus');
+            
+            try {
+                statusEl.innerHTML = '<div class="info-message">Création de la sauvegarde en cours...</div>';
+                
+                const controls = await getAllControls();
+                const vehicles = await getVehicleList();
+                
+                const backupData = {
+                    version: '2.0',
+                    timestamp: new Date().toISOString(),
+                    type: 'manual',
+                    data: {
+                        controls: controls,
+                        vehicles: vehicles
+                    },
+                    stats: {
+                        totalControls: controls.length,
+                        totalVehicles: vehicles.length,
+                        dateRange: controls.length > 0 ? {
+                            earliest: Math.min(...controls.map(c => new Date(c.dateControle).getTime())),
+                            latest: Math.max(...controls.map(c => new Date(c.dateControle).getTime()))
+                        } : null
+                    }
+                };
+                
+                const filename = `GazService_Backup_${new Date().toISOString().replace(/[:.]/g, '-').split('T')[0]}.json`;
+                
+                downloadJSON(backupData, filename);
+                statusEl.innerHTML = `<div class="success-message">Sauvegarde créée et téléchargée : ${filename}</div>`;
+                
+            } catch (error) {
+                statusEl.innerHTML = '<div class="error-message">Erreur lors de la création de la sauvegarde : ' + error.message + '</div>';
+            }
+        }
+
+        // Télécharger un objet JSON
+        function downloadJSON(data, filename) {
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Gérer la sélection du fichier de sauvegarde
+        function handleBackupFile(input) {
+            const restoreBtn = document.getElementById('restoreBtn');
+            const statusEl = document.getElementById('restoreStatus');
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
+                    statusEl.innerHTML = '<div class="error-message">Veuillez sélectionner un fichier JSON valide</div>';
+                    restoreBtn.disabled = true;
+                    return;
+                }
+                
+                selectedBackupFile = file;
+                restoreBtn.disabled = false;
+                statusEl.innerHTML = `<div class="info-message">Fichier sélectionné : ${file.name}</div>`;
+            } else {
+                selectedBackupFile = null;
+                restoreBtn.disabled = true;
+                statusEl.innerHTML = '';
+            }
+        }
+
+        // Restaurer une sauvegarde
+        async function restoreBackup() {
+            if (!selectedBackupFile) {
+                return;
+            }
+            
+            const statusEl = document.getElementById('restoreStatus');
+            
+            if (!confirm('⚠️ ATTENTION ⚠️\n\nCette action va SUPPRIMER toutes les données actuelles et les remplacer par celles du fichier de sauvegarde.\n\nÊtes-vous sûr de vouloir continuer ?')) {
+                return;
+            }
+            
+            try {
+                statusEl.innerHTML = '<div class="info-message">Restauration en cours...</div>';
+                
+                // Lire le fichier
+                const fileContent = await readFileAsText(selectedBackupFile);
+                const backupData = JSON.parse(fileContent);
+                
+                // Vérifier la structure du fichier
+                if (backupData.version === '2.0' && backupData.data) {
+                    // Nouvelle structure avec véhicules et contrôles séparés
+                    const controls = backupData.data.controls || [];
+                    const vehicles = backupData.data.vehicles || [];
+                    
+                    // Vider les bases actuelles
+                    await clearAllData();
+                    await clearVehicleListFromDB();
+                    
+                    // Restaurer les contrôles
+                    for (const control of controls) {
+                        const { id, ...controlData } = control;
+                        await saveControlDirectly(controlData);
+                    }
+                    
+                    // Restaurer les véhicules
+                    if (vehicles.length > 0) {
+                        await saveVehicleList(vehicles);
+                    }
+                    
+                    statusEl.innerHTML = `<div class="success-message">
+                        ✅ Restauration réussie !<br>
+                        ${controls.length} contrôle(s) restauré(s)<br>
+                        ${vehicles.length} véhicule(s) restauré(s)<br>
+                        Date de la sauvegarde : ${new Date(backupData.timestamp).toLocaleString('fr-FR')}
+                    </div>`;
+                    
+                } else if (backupData.data && Array.isArray(backupData.data)) {
+                    // Ancienne structure (rétrocompatibilité)
+                    await clearAllData();
+                    
+                    for (const control of backupData.data) {
+                        const { id, ...controlData } = control;
+                        await saveControlDirectly(controlData);
+                    }
+                    
+                    statusEl.innerHTML = `<div class="success-message">
+                        ✅ Restauration réussie !<br>
+                        ${backupData.data.length} contrôle(s) restauré(s)<br>
+                        Date de la sauvegarde : ${new Date(backupData.timestamp).toLocaleString('fr-FR')}
+                    </div>`;
+                } else {
+                    throw new Error('Format de fichier de sauvegarde invalide');
+                }
+                
+                // Recharger l'affichage
+                await loadControls();
+                await loadVehicleProgress();
+                
+                // Réinitialiser la sélection
+                document.getElementById('backupFile').value = '';
+                document.getElementById('restoreBtn').disabled = true;
+                selectedBackupFile = null;
+                
+                // Créer une nouvelle sauvegarde automatique
+                createAutoBackup();
+                
+            } catch (error) {
+                statusEl.innerHTML = '<div class="error-message">Erreur lors de la restauration : ' + error.message + '</div>';
+            }
+        }
+
+        // Lire un fichier comme texte
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = e => reject(new Error('Erreur de lecture du fichier'));
+                reader.readAsText(file);
+            });
+        }
+
+        // Sauvegarder un contrôle sans déclencher la sauvegarde automatique
+        function saveControlDirectly(data) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.add(data);
+                
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // === FONCTIONS EXISTANTES ===
+
+        // Gestion des onglets
+        function showTab(tabName) {
+            // Masquer tous les contenus
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Désactiver tous les onglets
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Activer l'onglet sélectionné
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Charger les données si nécessaire
+            if (tabName === 'historique') {
+                loadControls();
+            } else if (tabName === 'avancement') {
+                loadVehicleProgress();
+            } else if (tabName === 'pdf') {
+                // Initialiser les dates par défaut pour le PDF
+                const today = new Date().toISOString().split('T')[0];
+                const lastMonth = new Date();
+                lastMonth.setMonth(lastMonth.getMonth() - 1);
+                const lastMonthStr = lastMonth.toISOString().split('T')[0];
+                
+                if (!document.getElementById('pdfDateDebut').value) {
+                    document.getElementById('pdfDateDebut').value = lastMonthStr;
+                }
+                if (!document.getElementById('pdfDateFin').value) {
+                    document.getElementById('pdfDateFin').value = today;
+                }
+            }
+        }
+
+        // Gestion du formulaire
+        document.getElementById('vehicleForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {
+                conducteur: formData.get('conducteur'),
+                dateControle: formData.get('dateControle'),
+                immatriculation: formData.get('immatriculation').toUpperCase(),
+                kilometrage: formData.get('kilometrage') || null,
+                prochainControle: formData.get('prochainControle') || null,
+                derniereRevision: formData.get('derniereRevision') || null,
+                
+                // Documents
+                permis: formData.has('permis'),
+                carteVerte: formData.has('carteVerte'),
+                carteGrise: formData.has('carteGrise'),
+                carteCarburant: formData.has('carteCarburant'),
+                
+                // Équipements
+                giletJaune: formData.has('giletJaune'),
+                triangle: formData.has('triangle'),
+                roueSecours: formData.has('roueSecours'),
+                trousseSecours: formData.has('trousseSecours'),
+                
+                // États
+                etatRangement: formData.get('etatRangement'),
+                propretéInterieur: formData.get('propretéInterieur'),
+                propretéExterieur: formData.get('propretéExterieur'),
+                
+                // Pneus
+                pneuAvantGauche: formData.get('pneuAvantGauche'),
+                pneuAvantDroit: formData.get('pneuAvantDroit'),
+                pneuArriereGauche: formData.get('pneuArriereGauche'),
+                pneuArriereDroit: formData.get('pneuArriereDroit'),
+                
+                // Commentaires
+                commentaires: formData.get('commentaires') || '',
+                
+                // Photos
+                photos: currentPhotos.map(photo => ({
+                    id: photo.id,
+                    data: photo.data,
+                    timestamp: photo.timestamp
+                })),
+                
+                dateCreation: new Date().toISOString()
+            };
+            
+            try {
+                await saveControl(data);
+                showMessage('success', `Contrôle enregistré avec succès ! (${currentPhotos.length} photo(s) incluse(s))`);
+                resetForm();
+                loadControls();
+            } catch (error) {
+                showMessage('error', 'Erreur lors de l\'enregistrement : ' + error.message);
+            }
+        });
+
+        // Réinitialiser le formulaire
+        function resetForm() {
+            document.getElementById('vehicleForm').reset();
+            document.getElementById('dateControle').value = new Date().toISOString().split('T')[0];
+            updateCheckboxStyles();
+            resetPhotos(); // Réinitialiser aussi les photos
+        }
+
+        // Charger et afficher les contrôles
+        async function loadControls() {
+            try {
+                const controls = await getAllControls();
+                displayControls(controls);
+            } catch (error) {
+                console.error('Erreur lors du chargement des contrôles:', error);
+            }
+        }
+
+        // Afficher les contrôles
+        function displayControls(controls) {
+            const container = document.getElementById('controlsList');
+            
+            if (controls.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <h3>Aucun contrôle enregistré</h3>
+                        <p>Commencez par ajouter un nouveau contrôle</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            controls.sort((a, b) => new Date(b.dateControle) - new Date(a.dateControle));
+            
+            container.innerHTML = controls.map(control => createControlCard(control)).join('');
+        }
+
+        // Créer une carte de contrôle
+        function createControlCard(control) {
+            const formatDate = (dateStr) => {
+                if (!dateStr) return 'Non renseigné';
+                return new Date(dateStr).toLocaleDateString('fr-FR');
+            };
+            
+            const formatKilometrage = (km) => {
+                if (!km) return 'Non renseigné';
+                return km + ' km';
+            };
+            
+            const getStatusBadge = (value, type = 'boolean') => {
+                if (type === 'boolean') {
+                    return value ? 
+                        '<span class="status-badge status-ok">✓ Présent</span>' :
+                        '<span class="status-badge status-missing">✗ Absent</span>';
+                } else {
+                    return `<span class="status-badge status-${value}">${value.charAt(0).toUpperCase() + value.slice(1)}</span>`;
+                }
+            };
+
+            // Générer la section commentaires
+            const commentairesSection = control.commentaires && control.commentaires.trim() ? `
+                <div class="control-comments">
+                    <h5>💬 Commentaires</h5>
+                    <div class="comment-text" style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 4px solid #007bff; margin-top: 10px; white-space: pre-wrap;">${control.commentaires}</div>
+                </div>
+            ` : '';
+
+            // Générer la section photos
+            const photosSection = control.photos && control.photos.length > 0 ? `
+                <div class="control-photos">
+                    <h5>📸 Photos du contrôle (${control.photos.length})</h5>
+                    <div class="photos-grid">
+                        ${control.photos.map((photo, index) => `
+                            <img src="${photo.data}" 
+                                 alt="Photo ${index + 1}" 
+                                 class="photo-thumbnail" 
+                                 onclick="viewPhoto('${photo.data}')"
+                                 title="Cliquez pour agrandir">
+                        `).join('')}
+                    </div>
+                </div>
+            ` : '';
+            
+            return `
+                <div class="control-item">
+                    <div class="control-header">
+                        <h4>🚗 ${control.immatriculation} - ${control.conducteur}</h4>
+                        <button class="btn btn-danger" onclick="deleteControlById(${control.id})" style="padding: 8px 15px; font-size: 0.9rem;">
+                            🗑️ Supprimer
+                        </button>
+                    </div>
+                    
+                    <div class="control-info">
+                        <div class="info-item">
+                            <span class="info-label">Date du contrôle</span>
+                            <span class="info-value">${formatDate(control.dateControle)}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Kilométrage</span>
+                            <span class="info-value">${formatKilometrage(control.kilometrage)}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Prochain CT</span>
+                            <span class="info-value">${formatDate(control.prochainControle)}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Dernière révision</span>
+                            <span class="info-value">${formatKilometrage(control.derniereRevision)}</span>
+                        </div>
+                    </div>
+                    
+                    <h5 style="margin: 15px 0 10px 0;">📋 Documents</h5>
+                    <div class="control-info">
+                        <div class="info-item">
+                            <span class="info-label">Permis</span>
+                            ${getStatusBadge(control.permis)}
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Carte verte</span>
+                            ${getStatusBadge(control.carteVerte)}
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Carte grise</span>
+                            ${getStatusBadge(control.carteGrise)}
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Carte carburant</span>
+                            ${getStatusBadge(control.carteCarburant)}
+                        </div>
+                    </div>
+                    
+                    <h5 style="margin: 15px 0 10px 0;">🛡️ Équipements</h5>
+                    <div class="control-info">
+                        <div class="info-item">
+                            <span class="info-label">Gilet jaune</span>
+                            ${getStatusBadge(control.giletJaune)}
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Triangle</span>
+                            ${getStatusBadge(control.triangle)}
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Roue secours</span>
+                            ${getStatusBadge(control.roueSecours)}
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Trousse secours</span>
+                            ${getStatusBadge(control.trousseSecours)}
+                        </div>
+                    </div>
+                    
+                    <h5 style="margin: 15px 0 10px 0;">🔧 État général</h5>
+                    <div class="control-info">
+                        <div class="info-item">
+                            <span class="info-label">Rangement</span>
+                            ${getStatusBadge(control.etatRangement, 'state')}
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Propreté int.</span>
+                            ${getStatusBadge(control.propretéInterieur, 'state')}
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Propreté ext.</span>
+                            ${getStatusBadge(control.propretéExterieur, 'state')}
+                        </div>
+                    </div>
+                    
+                    <h5 style="margin: 15px 0 10px 0;">🛞 Pneus</h5>
+                    <div class="control-info">
+                        <div class="info-item">
+                            <span class="info-label">Avant gauche</span>
+                            ${getStatusBadge(control.pneuAvantGauche, 'state')}
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Avant droit</span>
+                            ${getStatusBadge(control.pneuAvantDroit, 'state')}
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Arrière gauche</span>
+                            ${getStatusBadge(control.pneuArriereGauche, 'state')}
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Arrière droit</span>
+                            ${getStatusBadge(control.pneuArriereDroit, 'state')}
+                        </div>
+                    </div>
+                    
+                    ${commentairesSection}
+                    
+                    ${photosSection}
+                </div>
+            `;
+        }
+
+        // Supprimer un contrôle
+        async function deleteControlById(id) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce contrôle ?')) {
+                try {
+                    await deleteControl(id);
+                    showMessage('success', '✅ Contrôle supprimé avec succès !');
+                    loadControls();
+                } catch (error) {
+                    showMessage('error', '❌ Erreur lors de la suppression : ' + error.message);
+                }
+            }
+        }
+
+        // Filtrer les contrôles
+        function filterControls() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const controlItems = document.querySelectorAll('.control-item');
+            
+            controlItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        }
+
+        // Export Excel
+        async function exportToExcel() {
+            const loadingEl = document.getElementById('exportLoading');
+            const statusEl = document.getElementById('exportStatus');
+            
+            try {
+                loadingEl.style.display = 'block';
+                statusEl.innerHTML = '';
+                
+                const controls = await getAllControls();
+                
+                if (controls.length === 0) {
+                    throw new Error('Aucune donnée à exporter');
+                }
+                
+                // Préparer les données pour Excel
+                const excelData = controls.map(control => ({
+                    'Date contrôle': control.dateControle,
+                    'Conducteur': control.conducteur,
+                    'Immatriculation': control.immatriculation,
+                    'Kilométrage': control.kilometrage || '',
+                    'Prochain CT': control.prochainControle || '',
+                    'Dernière révision (km)': control.derniereRevision || '',
+                    'Permis': control.permis ? 'Oui' : 'Non',
+                    'Carte verte': control.carteVerte ? 'Oui' : 'Non',
+                    'Carte grise': control.carteGrise ? 'Oui' : 'Non',
+                    'Carte carburant': control.carteCarburant ? 'Oui' : 'Non',
+                    'Gilet jaune': control.giletJaune ? 'Oui' : 'Non',
+                    'Triangle': control.triangle ? 'Oui' : 'Non',
+                    'Roue secours': control.roueSecours ? 'Oui' : 'Non',
+                    'Trousse secours': control.trousseSecours ? 'Oui' : 'Non',
+                    'État rangement': control.etatRangement,
+                    'Propreté intérieur': control.propretéInterieur,
+                    'Propreté extérieur': control.propretéExterieur,
+                    'Pneu AV G': control.pneuAvantGauche,
+                    'Pneu AV D': control.pneuAvantDroit,
+                    'Pneu AR G': control.pneuArriereGauche,
+                    'Pneu AR D': control.pneuArriereDroit,
+                    'Commentaires': control.commentaires || '',
+                    'Nb Photos': control.photos ? control.photos.length : 0,
+                    'Date création': new Date(control.dateCreation).toLocaleDateString('fr-FR')
+                }));
+                
+                // Créer le workbook
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(excelData);
+                
+                // Ajuster la largeur des colonnes
+                const colWidths = [];
+                Object.keys(excelData[0]).forEach(key => {
+                    const maxLength = Math.max(
+                        key.length,
+                        ...excelData.map(row => String(row[key] || '').length)
+                    );
+                    colWidths.push({ width: Math.min(maxLength + 2, 50) });
+                });
+                ws['!cols'] = colWidths;
+                
+                XLSX.utils.book_append_sheet(wb, ws, 'Contrôles Véhicules');
+                
+                // Générer et télécharger le fichier
+                const fileName = `Controles_Vehicules_GazService_${new Date().toISOString().split('T')[0]}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+                
+                statusEl.innerHTML = `<div class="success-message">✅ Fichier "${fileName}" téléchargé avec succès !</div>`;
+                
+            } catch (error) {
+                statusEl.innerHTML = `<div class="error-message">❌ Erreur lors de l'export : ${error.message}</div>`;
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        // Afficher un message
+        function showMessage(type, message) {
+            const messageEl = document.createElement('div');
+            messageEl.className = `${type}-message`;
+            messageEl.textContent = message;
+            messageEl.style.position = 'fixed';
+            messageEl.style.top = '20px';
+            messageEl.style.right = '20px';
+            messageEl.style.zIndex = '1000';
+            messageEl.style.maxWidth = '400px';
+            
+            document.body.appendChild(messageEl);
+            
+            setTimeout(() => {
+                messageEl.remove();
+            }, 5000);
+        }
+
+        // Style des checkboxes
+        function updateCheckboxStyles() {
+            document.querySelectorAll('.checkbox-item').forEach(item => {
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                if (checkbox.checked) {
+                    item.classList.add('checked');
+                } else {
+                    item.classList.remove('checked');
+                }
+            });
+        }
+
+        // Écouteurs d'événements pour les checkboxes
+        document.addEventListener('change', function(e) {
+            if (e.target.type === 'checkbox') {
+                updateCheckboxStyles();
+            }
+        });
+
+        // Formatage automatique de l'immatriculation
+        function formatImmatriculation(value) {
+            // Supprimer tous les caractères non alphanumériques
+            value = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+            
+            // Limiter à 7 caractères (2 lettres + 3 chiffres + 2 lettres)
+            if (value.length > 7) {
+                value = value.substring(0, 7);
+            }
+            
+            // Formater avec des tirets : AA-000-AA
+            if (value.length >= 5) {
+                return value.substring(0, 2) + '-' + value.substring(2, 5) + '-' + value.substring(5);
+            } else if (value.length >= 2) {
+                return value.substring(0, 2) + '-' + value.substring(2);
+            }
+            
+            return value;
+        }
+
+        // Valider le format de l'immatriculation
+        function validateImmatriculation(value) {
+            const regex = /^[A-Z]{2}-[0-9]{3}-[A-Z]{2}$/;
+            return regex.test(value);
+        }
+
+        // Gestionnaire pour le champ immatriculation et nom du conducteur
+        document.addEventListener('DOMContentLoaded', function() {
+            const immatriculationField = document.getElementById('immatriculation');
+            const conducteurField = document.getElementById('conducteur');
+            
+            // Formatage du champ immatriculation
+            if (immatriculationField) {
+                immatriculationField.addEventListener('input', function(e) {
+                    const cursorPosition = e.target.selectionStart;
+                    const oldValue = e.target.value;
+                    const newValue = formatImmatriculation(e.target.value);
+                    
+                    e.target.value = newValue;
+                    
+                    // Repositionner le curseur
+                    const newCursorPosition = cursorPosition + (newValue.length - oldValue.length);
+                    e.target.setSelectionRange(newCursorPosition, newCursorPosition);
+                    
+                    // Validation visuelle
+                    if (newValue.length === 9 && validateImmatriculation(newValue)) {
+                        e.target.style.borderColor = '#28a745';
+                        e.target.style.backgroundColor = '#f8fff9';
+                    } else if (newValue.length > 0) {
+                        e.target.style.borderColor = '#ffc107';
+                        e.target.style.backgroundColor = '#fffdf0';
+                    } else {
+                        e.target.style.borderColor = '#bdc3c7';
+                        e.target.style.backgroundColor = '#ffffff';
+                    }
+                });
+
+                // Validation au blur
+                immatriculationField.addEventListener('blur', function(e) {
+                    if (e.target.value && !validateImmatriculation(e.target.value)) {
+                        e.target.style.borderColor = '#dc3545';
+                        e.target.style.backgroundColor = '#fff5f5';
+                        showMessage('warning', 'Format d\'immatriculation invalide. Utilisez le format AA-000-AA');
+                    }
+                });
+            }
+
+            // Formatage du champ nom du conducteur en majuscules
+            if (conducteurField) {
+                conducteurField.addEventListener('input', function(e) {
+                    const cursorPosition = e.target.selectionStart;
+                    const newValue = e.target.value.toUpperCase();
+                    
+                    e.target.value = newValue;
+                    
+                    // Maintenir la position du curseur
+                    e.target.setSelectionRange(cursorPosition, cursorPosition);
+                });
+            }
+        });
+
+        // Drag & Drop pour l'import de fichiers
+        document.addEventListener('DOMContentLoaded', function() {
+            const importSection = document.getElementById('importSection');
+            
+            if (importSection) {
+                // Gestion du drag & drop
+                importSection.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    importSection.classList.add('drag-over');
+                });
+                
+                importSection.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    importSection.classList.remove('drag-over');
+                });
+                
+                importSection.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    importSection.classList.remove('drag-over');
+                    
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const fileInput = document.getElementById('vehicleListFile');
+                        fileInput.files = files;
+                        handleVehicleListFile(fileInput);
+                    }
+                });
+            }
+        });
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                await initDB();
+                console.log('Base de données initialisée avec succès');
+                
+                // Définir la date du jour par défaut
+                document.getElementById('dateControle').value = new Date().toISOString().split('T')[0];
+                
+                // Initialiser les photos
+                updatePhotoPreview();
+                
+                // Charger les contrôles si on est sur l'onglet historique
+                loadControls();
+                
+                // Vérifier s'il y a une sauvegarde automatique existante
+                const autoBackup = localStorage.getItem('gazservice_auto_backup');
+                if (autoBackup) {
+                    const backupData = JSON.parse(autoBackup);
+                    const controlsCount = backupData.data ? 
+                        (backupData.data.controls ? backupData.data.controls.length : backupData.data.length) : 0;
+                    const vehiclesCount = backupData.data && backupData.data.vehicles ? backupData.data.vehicles.length : 0;
+                    console.log(`Sauvegarde automatique disponible : ${controlsCount} contrôle(s), ${vehiclesCount} véhicule(s), créée le ${new Date(backupData.timestamp).toLocaleString('fr-FR')}`);
+                }
+                
+            } catch (error) {
+                console.error('Erreur lors de l\'initialisation de la base de données:', error);
+                showMessage('error', 'Erreur d\'initialisation de la base de données');
+            }
+        });
+
+        // Gérer la fermeture du modal caméra avec Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const cameraModal = document.getElementById('cameraModal');
+                if (cameraModal.style.display === 'flex') {
+                    closeCamera();
+                }
+                
+                // Fermer aussi le viewer de photos
+                const photoViewer = document.querySelector('.photo-viewer-modal');
+                if (photoViewer) {
+                    photoViewer.remove();
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>
